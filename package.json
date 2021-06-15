@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/jasondnguyen/zoom-clone-backend#readme",
   "dependencies": {
+    "aws-sdk": "^2.928.0",
     "bcryptjs": "^2.4.3",
     "config": "^3.3.6",
     "express": "^4.17.1",
