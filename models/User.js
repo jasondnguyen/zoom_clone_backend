@@ -1,20 +1,25 @@
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+
 var AWS = require('aws-sdk');
 
 AWS.config.update({
   region: 'us-east-2',
 });
 
-const makeUser = (email, name, password, res) => {
+const makeUser = async (email, name, password, res) => {
   var docClient = new AWS.DynamoDB.DocumentClient();
   const hash = crypto.createHash('sha256', email).digest('hex');
 
+  const salt = await bcrypt.genSalt(10);
+  const encryptPassword = await bcrypt.hash(password, salt);
+
   var params = {
-    TableName: 'zoom_users',
+    TableName: `${process.env.USER_TABLE}`,
     Item: {
       email: email,
       id: hash,
-      password: password,
+      password: encryptPassword,
       name: name,
     },
     ConditionExpression:
@@ -23,9 +28,11 @@ const makeUser = (email, name, password, res) => {
 
   docClient.put(params, function (err, data) {
     if (err) {
-      res.status(400).json({ errors: [{ msg: 'Unable to add item' }] });
+      res
+        .status(400)
+        .json({ errors: [{ msg: 'Account with that email already exists' }] });
     } else {
-      res.send('Added item');
+      res.send('Successfully created account');
     }
   });
 };
