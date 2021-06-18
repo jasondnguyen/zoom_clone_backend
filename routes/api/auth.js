@@ -1,12 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator/check');
-const makeUser = require('../../models/User');
+const makeUser = require('../../functions/makeUser');
+const checkUser = require('../../functions/checkUser');
 
 // @route   GET api/auth
 // @desc    Login
 // @access  Public
-router.get('/', (req, res) => res.send('Auth route'));
+router.get('/', (req, res) => {
+  const { email, password } = req.body;
+  checkUser(email, pasasword, res);
+});
 
 // @route   POST api/auth
 // @desc    Register user
@@ -14,13 +18,13 @@ router.get('/', (req, res) => res.send('Auth route'));
 router.post(
   '/',
   [
+    check('name', 'Name is required').not().isEmpty(),
     check('email', 'Please include a valid email').isEmail(),
     check(
       'password',
       'Please enter a password with 1 or more characters'
     ).isLength({ min: 1 }),
   ],
-
   (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

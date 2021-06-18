@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 var AWS = require('aws-sdk');
 
@@ -7,7 +8,7 @@ AWS.config.update({
   region: 'us-east-2',
 });
 
-const makeUser = async (email, name, password, res) => {
+const makeUser = async (email, password, name, res) => {
   var docClient = new AWS.DynamoDB.DocumentClient();
   const hash = crypto.createHash('sha256', email).digest('hex');
 
@@ -28,11 +29,21 @@ const makeUser = async (email, name, password, res) => {
 
   docClient.put(params, function (err, data) {
     if (err) {
-      res
+      return res
         .status(400)
         .json({ errors: [{ msg: 'Account with that email already exists' }] });
     } else {
-      res.send('Successfully created account');
+      const payload = {
+        user: {
+          id: hash,
+        },
+      };
+
+      const secret = `${process.env.JWT_SECRET}`;
+      jwt.sign(payload, secret, { expiresIn: 360000 }, (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      });
     }
   });
 };
