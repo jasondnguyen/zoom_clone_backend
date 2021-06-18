@@ -17,7 +17,6 @@ const checkUser = async (email, res) => {
       email: email,
       id: hash,
     },
-    ProjectionExpression: 'password',
   };
 
   await docClient

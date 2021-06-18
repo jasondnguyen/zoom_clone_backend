@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator/check');
 const makeUser = require('../../functions/makeUser');
 const checkUser = require('../../functions/checkUser');
@@ -7,9 +8,9 @@ const checkUser = require('../../functions/checkUser');
 // @route   GET api/auth
 // @desc    Login
 // @access  Public
-router.get('/', (req, res) => {
+router.get('/', auth, (req, res) => {
   const { email, password } = req.body;
-  checkUser(email, pasasword, res);
+  checkUser(email, password, res);
 });
 
 // @route   POST api/auth
