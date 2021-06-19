@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { check, validationResult } = require('express-validator/check');
+const { check, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
@@ -51,12 +51,16 @@ router.post(
             errors: [{ msg: 'Account with that email already exists' }],
           });
         } else {
+          const meetingId = Math.floor(Math.random() * 1000000000);
+
           var params = {
             TableName: `${process.env.USER_TABLE}`,
             Item: {
               id: id,
+              email: email,
               name: name,
               password: encryptedPassword,
+              meeting_id: meetingId,
             },
             ConditionExpression: 'attribute_not_exists(id)',
           };

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../../middleware/auth');
-const { check, validationResult } = require('express-validator/check');
+const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 var AWS = require('aws-sdk');
@@ -22,6 +22,8 @@ router.get('/', auth, async (req, res) => {
       Key: {
         id: req.user.id,
       },
+      ProjectionExpression: 'id, #n, meeting_id',
+      ExpressionAttributeNames: { '#n': 'name' },
     };
 
     const user = await docClient.get(params).promise();
