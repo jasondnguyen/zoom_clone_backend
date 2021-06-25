@@ -1,8 +1,9 @@
 const express = require('express');
-const dotenv = require('dotenv');
-
-dotenv.config();
+const dotenv = require('dotenv').config();
 const app = express();
+
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 
 app.get('/', (req, res) => {
   res.send('API Running');
@@ -16,8 +17,18 @@ app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/users', require('./routes/api/users'));
 app.use('/api/meeting', require('./routes/api/meeting'));
 
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+io.on('connection', socket => {
+  console.log('socket.io connection made');
+  socket.on('disconnect', function () {
+    console.log('user disconnected');
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
-
-// use express.io
+server.listen(PORT, () => console.log(`Server started on port ${PORT}`));

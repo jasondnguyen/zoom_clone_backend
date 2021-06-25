@@ -21,6 +21,7 @@ router.get('/', auth, async (req, res) => {
       TableName: `${process.env.USER_TABLE}`,
       Key: {
         id: req.user.id,
+        meeting_id: req.user.meeting_id,
       },
       ProjectionExpression: 'id, #n, meeting_id',
       ExpressionAttributeNames: { '#n': 'name' },
@@ -62,9 +63,9 @@ router.post(
         },
       };
 
-      const id = await docClient.get(emailParam).promise();
+      const data = await docClient.get(emailParam).promise();
 
-      if (!Object.keys(id).length) {
+      if (!Object.keys(data).length) {
         return res.status(400).json({
           errors: [{ msg: 'Invalid Credentials' }],
         });
@@ -73,7 +74,7 @@ router.post(
       var params = {
         TableName: `${process.env.USER_TABLE}`,
         Key: {
-          id: id.Item.id,
+          id: data.Item.id,
         },
       };
 

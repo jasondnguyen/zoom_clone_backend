@@ -4,12 +4,31 @@ const { check, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-
-var AWS = require('aws-sdk');
+const fs = require('fs');
+const path = require('path');
+const AWS = require('aws-sdk');
 
 AWS.config.update({
   region: 'us-east-2',
 });
+
+const uploadPicture = async (req, res) => {
+  try {
+    console.log(req);
+    var s3 = new AWS.S3();
+    var params = {
+      Bucket: `${process.env.S3_BUCKET}`,
+      Body: req.avatar,
+      Key: Date.now(),
+    };
+
+    await s3.upload(params).promise();
+
+    res.send('SUCCESS');
+  } catch (error) {
+    console.log(err.message);
+  }
+};
 
 // @route   POST api/users
 // @desc    Register user
@@ -22,6 +41,7 @@ router.post(
     check('password', 'Password is required').exists(),
   ],
   async (req, res) => {
+    console.log(req.body);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -57,10 +77,10 @@ router.post(
             TableName: `${process.env.USER_TABLE}`,
             Item: {
               id: id,
+              meeting_id: meetingId,
               email: email,
               name: name,
               password: encryptedPassword,
-              meeting_id: meetingId,
             },
             ConditionExpression: 'attribute_not_exists(id)',
           };
@@ -69,6 +89,7 @@ router.post(
           const payload = {
             user: {
               id: id,
+              meeting_id: meetingId,
             },
           };
 
