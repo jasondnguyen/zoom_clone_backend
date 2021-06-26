@@ -12,22 +12,26 @@ AWS.config.update({
   region: 'us-east-2',
 });
 
-const uploadPicture = async (req, res) => {
+const uploadPicture = async (id, avatar) => {
   try {
-    console.log(req);
     var s3 = new AWS.S3();
     var params = {
       Bucket: `${process.env.S3_BUCKET}`,
-      Body: req.avatar,
-      Key: Date.now(),
+      Body: avatar,
+      Key: id,
     };
 
     await s3.upload(params).promise();
-
-    res.send('SUCCESS');
   } catch (error) {
     console.log(err.message);
   }
+};
+
+const isNotEmpty = string => {
+  if (string === '') {
+    return false;
+  }
+  return true;
 };
 
 // @route   POST api/users
@@ -48,7 +52,9 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password } = req.body;
+    const { name, email, password, avatar } = req.body;
+
+    const hasAvatar = isNotEmpty(avatar);
 
     try {
       var docClient = new AWS.DynamoDB.DocumentClient();
@@ -81,6 +87,7 @@ router.post(
               email: email,
               name: name,
               password: encryptedPassword,
+              hasAvatar: hasAvatar,
             },
             ConditionExpression: 'attribute_not_exists(id)',
           };
@@ -92,6 +99,10 @@ router.post(
               meeting_id: meetingId,
             },
           };
+
+          if (hasAvatar === true) {
+            await uploadPicture(id, avatar);
+          }
 
           const secret = `${process.env.JWT_SECRET}`;
 
