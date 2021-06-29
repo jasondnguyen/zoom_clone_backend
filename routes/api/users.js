@@ -12,21 +12,6 @@ AWS.config.update({
   region: 'us-east-2',
 });
 
-const uploadPicture = async (id, avatar) => {
-  try {
-    var s3 = new AWS.S3();
-    var params = {
-      Bucket: `${process.env.S3_BUCKET}`,
-      Body: avatar,
-      Key: id,
-    };
-
-    await s3.upload(params).promise();
-  } catch (error) {
-    console.log(err.message);
-  }
-};
-
 const isNotEmpty = string => {
   if (string === '') {
     return false;
@@ -101,7 +86,15 @@ router.post(
           };
 
           if (hasAvatar === true) {
-            await uploadPicture(id, avatar);
+            var s3 = new AWS.S3();
+            var params = {
+              Bucket: `${process.env.S3_BUCKET}`,
+              Body: avatar,
+              Key: id,
+            };
+
+            await s3.upload(params).promise();
+            console.log(err.message);
           }
 
           const secret = `${process.env.JWT_SECRET}`;

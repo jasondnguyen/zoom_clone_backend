@@ -22,13 +22,13 @@ app.use((req, res, next) => {
   next();
 });
 
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+
 io.on('connection', socket => {
   console.log('socket.io connection made');
   socket.on('disconnect', function () {
     console.log('user disconnected');
   });
 });
-
-const PORT = process.env.PORT || 5000;
-
-server.listen(PORT, () => console.log(`Server started on port ${PORT}`));
