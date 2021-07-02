@@ -21,15 +21,16 @@ router.get('/', auth, async (req, res) => {
       TableName: `${process.env.USER_TABLE}`,
       Key: {
         id: req.user.id,
-        meeting_id: req.user.meeting_id,
       },
-      ProjectionExpression: 'id, #n, meeting_id',
+      ProjectionExpression: 'id, #n, meeting_id, picture',
       ExpressionAttributeNames: { '#n': 'name' },
     };
 
-    const user = await docClient.get(params).promise();
-    res.send(user.Item);
+    let user = await docClient.get(params).promise();
+
+    res.json(user.Item);
   } catch (err) {
+    console.log('its me');
     console.error(err.message);
     res.status(500).send('Server Error');
   }

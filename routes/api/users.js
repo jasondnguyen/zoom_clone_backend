@@ -4,9 +4,8 @@ const { check, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
-const path = require('path');
 const AWS = require('aws-sdk');
+const { S3 } = require('aws-sdk');
 
 AWS.config.update({
   region: 'us-east-2',
@@ -17,6 +16,22 @@ const isNotEmpty = string => {
     return false;
   }
   return true;
+};
+
+const generateUploadURL = async () => {
+  const id = uuidv4();
+
+  var s3 = new AWS.S3();
+  const imageName = id;
+
+  const params = {
+    Bucket: process.env.S3_Bucket,
+    Key: imageName,
+    Expires: 60,
+  };
+
+  const uploadURL = await s3.getSignedUrlPromise('putObject', params);
+  return { id: id, url: uploadURL };
 };
 
 // @route   POST api/users
@@ -37,15 +52,12 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, avatar } = req.body;
-
-    const hasAvatar = isNotEmpty(avatar);
+    const { name, email, password, picture, id } = req.body;
 
     try {
       var docClient = new AWS.DynamoDB.DocumentClient();
       const salt = await bcrypt.genSalt(10);
       const encryptedPassword = await bcrypt.hash(password, salt);
-      const id = uuidv4();
 
       var emailParams = {
         TableName: `${process.env.EMAIL_TABLE}`,
@@ -72,7 +84,7 @@ router.post(
               email: email,
               name: name,
               password: encryptedPassword,
-              hasAvatar: hasAvatar,
+              picture: picture,
             },
             ConditionExpression: 'attribute_not_exists(id)',
           };
@@ -84,18 +96,6 @@ router.post(
               meeting_id: meetingId,
             },
           };
-
-          if (hasAvatar === true) {
-            var s3 = new AWS.S3();
-            var params = {
-              Bucket: `${process.env.S3_BUCKET}`,
-              Body: avatar,
-              Key: id,
-            };
-
-            await s3.upload(params).promise();
-            console.log(err.message);
-          }
 
           const secret = `${process.env.JWT_SECRET}`;
 
@@ -109,9 +109,13 @@ router.post(
       console.error(err.message);
       res.status(500).send('Server error');
     }
-
-    //Add avatar to req body later
   }
 );
+
+router.post('/s3url', async (req, res) => {
+  const data = await generateUploadURL();
+
+  res.json(data);
+});
 
 module.exports = router;

@@ -5,7 +5,6 @@ const VideoGrant = AccessToken.VideoGrant;
 
 router.post('/', (req, res, next) => {
   try {
-    console.log(req.body);
     const twilioAccountSid = process.env.ACCOUNT_SID;
     const twilioApiKey = process.env.API_KEY;
     const twilioApiSecret = process.env.API_SECRET;
